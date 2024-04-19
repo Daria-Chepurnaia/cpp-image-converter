@@ -56,7 +56,7 @@ bool SaveBMP(const Path& file, const Image& image) {
     const int h = image.GetHeight();
     std::vector<char> buff(stride);
 
-    for (int y = h-1; y > 0; --y) {
+    for (int y = h - 1; y > 0; --y) {
         const Color* line = image.GetLine(y);
         for (int x = 0; x < w; ++x) {
             buff[x * 3 + 0] = static_cast<char>(line[x].b);
@@ -69,12 +69,18 @@ bool SaveBMP(const Path& file, const Image& image) {
 }
  
 Image LoadBMP(const Path& file) {
+    if (file.empty()) return {};
     ifstream ifs(file, ios::binary);
     BitmapFileHeader bf;
-
+// наставник в тредах писал, что нужно целую структуру заголовка считать, а потом все необходимые проверки сделать. Зачем ее посимвольно считывать?
     ifs.read((char*)&bf, sizeof(bf));
-    
-    if (!ifs || bf.symbols[0] != 'B' || bf.symbols[1] != 'M' || bf.space != 0 || bf.indent_data != 54) {
+//символа конца строки после структуры не будет. Две структуры и данные подряд идут. Не понимаю, зачем проверка на \n. Если при выполнении read будет достигнут конец файла,
+//проверка  !ifs будет true и вернется пустое изображение.   
+    if (!ifs || 
+        bf.symbols[0] != 'B' ||
+        bf.symbols[1] != 'M' ||
+        bf.space != 0 ||
+        bf.indent_data != 54) {
         return {};
     }
    
@@ -89,7 +95,7 @@ Image LoadBMP(const Path& file) {
     Image result(bi.width, bi.height, Color::Black());
     std::vector<char> buff(stride);
     
-    for (int y = bi.height-1; y > 0; --y) {
+    for (int y = bi.height - 1; y > 0; --y) {
         Color* line = result.GetLine(y);
         ifs.read(buff.data(), stride);
 
