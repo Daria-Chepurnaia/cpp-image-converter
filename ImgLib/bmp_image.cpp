@@ -24,15 +24,15 @@ PACKED_STRUCT_BEGIN BitmapInfoHeader {
     uint8_t color_planes_num = 1;
     uint8_t bits_per_pixel = 24;
     uint32_t compression_type = 0;
-    uint32_t num_bytes_of_data; //Произведение отступа на высоту
-    int32_t horDPI = 11811; //Горизонтальное разрешение
-    int32_t verDPI = 11811; //Вертикальное разрешение
-    int32_t num_of_colors_used = 0; //Количество использованных цветов 
-    int32_t num_of_colors = 0x1000000; //Количество значимых цветов  
+    uint32_t num_bytes_of_data; 
+    int32_t horDPI = 11811; // horizontal resolution
+    int32_t verDPI = 11811; // Vertical resolution
+    int32_t num_of_colors_used = 0; //The number of colors used
+    int32_t num_of_colors = 0x1000000; //The number of significant colors 
 }
 PACKED_STRUCT_END
 
-// функция вычисления отступа по ширине
+// Function of the computing of the margin by width
 static int GetBMPStride(int w) {
     return 4 * ((w * 3 + 3) / 4);
 }
@@ -72,10 +72,7 @@ Image LoadBMP(const Path& file) {
     if (file.empty()) return {};
     ifstream ifs(file, ios::binary);
     BitmapFileHeader bf;
-// наставник в тредах писал, что нужно целую структуру заголовка считать, а потом все необходимые проверки сделать. Зачем ее посимвольно считывать?
     ifs.read((char*)&bf, sizeof(bf));
-//символа конца строки после структуры не будет. Две структуры и данные подряд идут. Не понимаю, зачем проверка на \n. Если при выполнении read будет достигнут конец файла,
-//проверка  !ifs будет true и вернется пустое изображение.   
     if (!ifs || 
         bf.symbols[0] != 'B' ||
         bf.symbols[1] != 'M' ||

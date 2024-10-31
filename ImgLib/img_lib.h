@@ -22,13 +22,13 @@ struct Color {
 
 class Image {
 public:
-    // создаёт пустое изображение
+    // creates an empty image
     Image() = default;
 
-    // создаёт изображение заданного размера, заполняя его заданным цветом
+    // creates an image of a given size, filling it with a given color
     Image(int w, int h, Color fill);
 
-    // геттеры для отдельного пикселя изображения
+    // Getters for a separate pixel 
     Color GetPixel(int x, int y) const {
         return const_cast<Image*>(this)->GetPixel(x, y);
     }
@@ -37,19 +37,15 @@ public:
         return GetLine(y)[x];
     }
 
-    // геттер для заданной строки изображения
+   // Getter for a given image line
     Color* GetLine(int y);
     const Color* GetLine(int y) const;
 
     int GetWidth() const;
     int GetHeight() const;
 
-    // шаг задаёт смещение соседних строк изображения
-    // он обычно совпадает с шириной, но может быть больше неё
     int GetStep() const;
 
-    // будем считать изображение корректным, если
-    // его площадь положительна
     explicit operator bool() const {
         return GetWidth() > 0 && GetHeight() > 0;
     }

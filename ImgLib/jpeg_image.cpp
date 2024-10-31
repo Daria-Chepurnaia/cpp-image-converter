@@ -11,7 +11,6 @@ using namespace std;
 
 namespace img_lib {
 
-// структура из примера LibJPEG
 struct my_error_mgr {
     struct jpeg_error_mgr pub;
     jmp_buf setjmp_buffer;
@@ -19,7 +18,6 @@ struct my_error_mgr {
 
 typedef struct my_error_mgr* my_error_ptr;
 
-// функция из примера LibJPEG
 METHODDEF(void)
 my_error_exit (j_common_ptr cinfo) {
     my_error_ptr myerr = (my_error_ptr) cinfo->err;
@@ -27,9 +25,6 @@ my_error_exit (j_common_ptr cinfo) {
     longjmp(myerr->setjmp_buffer, 1);
 }
 
-// В эту функцию вставлен код примера из библиотеки libjpeg.
-// Измените его, чтобы адаптировать к переменным file и image.
-// Задание качества уберите - будет использовано качество по умолчанию
 bool SaveJPEG(const Path& file, const Image& image) {
     /* This struct contains the JPEG compression parameters and pointers to
     * working space (which is allocated as needed by the JPEG library).
@@ -154,7 +149,6 @@ bool SaveJPEG(const Path& file, const Image& image) {
     /* And we're done! */
 }
 
-// тип JSAMPLE фактически псевдоним для unsigned char
 void SaveSсanlineToImage(const JSAMPLE* row, int y, Image& out_image) {
     Color* line = out_image.GetLine(y);
     for (int x = 0; x < out_image.GetWidth(); ++x) {
@@ -171,10 +165,6 @@ Image LoadJPEG(const Path& file) {
     JSAMPARRAY buffer;
     int row_stride;
 
-    // Тут не избежать функции открытия файла из языка C,
-    // поэтому приходится использовать конвертацию пути к string.
-    // Под Visual Studio это может быть опасно, и нужно применить
-    // нестандартную функцию _wfopen
 #ifdef _MSC_VER
     if ((infile = _wfopen(file.wstring().c_str(), "rb")) == NULL) {
 #else
@@ -183,7 +173,7 @@ Image LoadJPEG(const Path& file) {
         return {};
     }
 
-    /* Шаг 1: выделяем память и инициализируем объект декодирования JPEG */
+    /* Step 1: We allocate the memory and initialize the decoding object JPEG  */
 
     cinfo.err = jpeg_std_error(&jerr.pub);
     jerr.pub.error_exit = my_error_exit;
@@ -196,21 +186,20 @@ Image LoadJPEG(const Path& file) {
 
     jpeg_create_decompress(&cinfo);
 
-    /* Шаг 2: устанавливаем источник данных */
+    /* Step 2: Install data source */
 
     jpeg_stdio_src(&cinfo, infile);
 
-    /* Шаг 3: читаем параметры изображения через jpeg_read_header() */
+    /* Step 3: We read the image parameters through JPEG_READ_HEADER () */
 
     (void) jpeg_read_header(&cinfo, TRUE);
 
-    /* Шаг 4: устанавливаем параметры декодирования */
-
-    // установим желаемый формат изображения
+    /* Step 4: set decoding parameters */
+    
     cinfo.out_color_space = JCS_RGB;
     cinfo.output_components = 3;
 
-    /* Шаг 5: начинаем декодирование */
+    /* Step 5: Start decoding */
 
     (void) jpeg_start_decompress(&cinfo);
     
@@ -219,10 +208,10 @@ Image LoadJPEG(const Path& file) {
     buffer = (*cinfo.mem->alloc_sarray)
                 ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-    /* Шаг 5a: выделим изображение ImgLib */
+    /* Step 5: We set the image imglib */
     Image result(cinfo.output_width, cinfo.output_height, Color::Black());
 
-    /* Шаг 6: while (остаются строки изображения) */
+    /* Step 6: While (image lines remain) */
     /*                     jpeg_read_scanlines(...); */
 
     while (cinfo.output_scanline < cinfo.output_height) {
@@ -232,11 +221,11 @@ Image LoadJPEG(const Path& file) {
         SaveSсanlineToImage(buffer[0], y, result);
     }
 
-    /* Шаг 7: Останавливаем декодирование */
+    /* Step 7: Stop decoding */
 
     (void) jpeg_finish_decompress(&cinfo);
 
-    /* Шаг 8: Освобождаем объект декодирования */
+    /* Step 8: We free the decoding object */
 
     jpeg_destroy_decompress(&cinfo);
     fclose(infile);
